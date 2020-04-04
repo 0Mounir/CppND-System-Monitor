@@ -20,10 +20,14 @@ Processor& System::Cpu() { return cpu_; }
 // TODO: Return a container composed of the system's processes
 vector<Process>& System::Processes() {
     vector<int> pids = LinuxParser::Pids();
+    set<Process> helperSet;
 
     for(unsigned int i=0; i<pids.size(); ++i){
         Process proc(pids[i]);
-        this->processes_.emplace_back(proc);
+       helperSet.insert(proc);
+    }
+    for(auto it=helperSet.rbegin(); it!=helperSet.rend(); ++it){
+        this->processes_.emplace_back(*it);
     }
     return this->processes_;
 }
@@ -45,5 +49,6 @@ int System::TotalProcesses() { return LinuxParser::TotalProcesses(); }
 
 // TODO: Return the number of seconds since the system started running
 long int System::UpTime() { return LinuxParser::UpTime(); }
+
 
 
