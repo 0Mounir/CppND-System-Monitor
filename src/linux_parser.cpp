@@ -121,7 +121,23 @@ long LinuxParser::Jiffies() {
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0;}
+long LinuxParser::ActiveJiffies(int pid) {
+    std::ifstream stream(kProcDirectory + to_string(pid) + kStatFilename);
+    string line, dummy;
+    int counter = 14;
+    long utime, stime, cutime, cstime;
+    if(stream.is_open()){
+        std::getline(stream, line);
+        std::istringstream iss(line);
+        /* Skip first 13 entry in line */
+        while(--counter){
+            iss>>dummy;
+        }
+        iss>>utime>>stime>>cutime>>cstime;
+    }
+    /* Are those system clock ticks or jiffies?? */
+    return utime+stime+cutime+cstime;
+}
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() {
@@ -162,7 +178,7 @@ long LinuxParser::IdleJiffies() {
 }
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+//vector<string> LinuxParser::CpuUtilization() {return {};}
 
 // TODO: Read and return the total number of processes
 int LinuxParser::TotalProcesses() {
@@ -204,21 +220,86 @@ int LinuxParser::RunningProcesses() {
 
 // TODO: Read and return the command associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Command(int pid) {
+    std::ifstream stream(kProcDirectory + to_string(pid) + kCmdlineFilename);
+    string line;
+    std::getline(stream,line);
+    return line;
+}
 
 // TODO: Read and return the memory used by a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Ram(int pid) {
+    std::ifstream stream(kProcDirectory + to_string(pid) + kStatusFilename);
+    string line, token;
+    long memSize;
+    while(std::getline(stream, line)){
+        std::istringstream iss(line);
+        while(iss>>token){
+            if("VmSize:" == token){
+                iss>>memSize;
+                return to_string(memSize/1000);
+            }
+        }
+    }
+
+    return "";
+}
 
 // TODO: Read and return the user ID associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Uid(int pid) {
+    std::ifstream stream(kProcDirectory + to_string(pid) + kStatusFilename);
+    string line, token;
+    string uid;
+    while(std::getline(stream, line)){
+        std::istringstream iss(line);
+        while(iss>>token){
+            if("Uid:" == token){
+                iss>>uid;
+                return uid;
+            }
+        }
+    }
+
+    return "";
+}
 
 // TODO: Read and return the user associated with a process
 // REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::User(int pid) {
+    string uid = LinuxParser::Uid(pid);
+    std::ifstream stream(kProcDirectory + to_string(pid) + kPasswordPath);
+    string line, token, user;
+    while(std::getline(stream, line)){
+        std::replace(line.begin(), line.end(), ':', ' ');
+        std::istringstream iss(line);
+        iss>>user;
+        /* get uid field */
+        iss>>token>>token;
+        if(uid == token)
+            return user;
+    }
+    return "";
+}
 
 // TODO: Read and return the uptime of a process
 // REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+long LinuxParser::UpTime(int pid) {
+    std::ifstream stream(kProcDirectory + to_string(pid) + kStatFilename);
+    string line, dummy;
+    int counter = 22;
+    long processUpTime;
+    if(stream.is_open()){
+        std::getline(stream, line);
+        std::istringstream iss(line);
+        /* Skip first 21 entry in line */
+        while(--counter){
+            iss>>dummy;
+        }
+        iss>>processUpTime;
+    }
+
+    return processUpTime;
+}
 
