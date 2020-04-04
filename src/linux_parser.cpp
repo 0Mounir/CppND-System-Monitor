@@ -269,7 +269,7 @@ string LinuxParser::Uid(int pid) {
 // REMOVE: [[maybe_unused]] once you define the function
 string LinuxParser::User(int pid) {
     string uid = LinuxParser::Uid(pid);
-    std::ifstream stream(kProcDirectory + to_string(pid) + kPasswordPath);
+    std::ifstream stream(kPasswordPath);
     string line, token, user;
     while(std::getline(stream, line)){
         std::replace(line.begin(), line.end(), ':', ' ');
@@ -300,6 +300,6 @@ long LinuxParser::UpTime(int pid) {
         iss>>processUpTime;
     }
 
-    return processUpTime;
+    return processUpTime/sysconf(_SC_CLK_TCK);
 }
 
