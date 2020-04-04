@@ -17,7 +17,7 @@ int Process::Pid() { return this->pid_; }
 // TODO: Return this->process's CPU utilization
 float Process::CpuUtilization() const{
     return (LinuxParser::ActiveJiffies(this->pid_)/sysconf(_SC_CLK_TCK))
-    /(float)(LinuxParser::UpTime()-LinuxParser::UpTime(this->pid_)); }
+    /(float)LinuxParser::UpTime(this->pid_); }
 
 // TODO: Return the command that generated this->process
 string Process::Command() { return LinuxParser::Command(this->pid_); }
